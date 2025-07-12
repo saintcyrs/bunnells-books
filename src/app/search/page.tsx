@@ -3,19 +3,20 @@
 
 import { useState } from "react";
 import {BookForm} from "@/components/book-form";
+import type { OpenLibraryBook, OpenLibraryBookAuthor } from "@/types";
 export default function SearchPage() {
   const [isbn, setIsbn] = useState("");
-  const [data, setData] = useState<any>(null);
+  const [data, setData] = useState<OpenLibraryBook | null>(null);
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
 
-  const lookup = async () => {
+  const lookup = async (): Promise<void> => {
     if (!isbn) return;
     setLoading(true);
     const res = await fetch(
       `https://openlibrary.org/api/books?bibkeys=ISBN:${isbn}&format=json&jscmd=data`
     );
-    const json = await res.json();
+    const json: Record<string, OpenLibraryBook> = await res.json();
     setData(json[`ISBN:${isbn}`] || null);
     setLoading(false);
   };
@@ -46,7 +47,7 @@ export default function SearchPage() {
           </div>
           <div>
             <strong>Authors:</strong>{" "}
-            {data.authors?.map((a: any) => a.name).join(", ")}
+            {data.authors?.map((a: OpenLibraryBookAuthor) => a.name).join(", ")}
           </div>
 
           <div className="flex gap-2">
@@ -73,7 +74,7 @@ export default function SearchPage() {
               defaultValues={{
                 isbn,
                 title: data.title,
-                author: data.authors?.map((a: any) => a.name).join(", "),
+                author: data.authors?.map((a: OpenLibraryBookAuthor) => a.name).join(", "),
               }}
               onSuccess={() => {
                 setShowForm(false);

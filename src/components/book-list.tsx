@@ -3,19 +3,9 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useState } from "react";
-import { BookForm, type BookFormValues } from "./book-form";
-
-type Book = {
-  id: number;
-  isbn: string | null;
-  title: string;
-  author: string;
-  edition: string | null;
-  condition: string | null;
-  notes: string | null;
-  cover_url: string | null;
-  added_at: string;
-};
+import { BookForm } from "./book-form";
+import type { Book, BookFormValues } from "@/types";
+import Image from "next/image";
 
 export function BookList() {
   const queryClient = useQueryClient();
@@ -61,7 +51,7 @@ export function BookList() {
   return (
     <>
       <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-        {data!.map((book) => (
+        {data!.map((book: Book) => (
           <div
             key={book.id}
             className="bg-white rounded shadow overflow-hidden relative group cursor-pointer"
@@ -81,9 +71,11 @@ export function BookList() {
               &#128465;
             </button>
             {book.cover_url ? (
-              <img
-                src={book.cover_url}
+              <Image
+                src={book.cover_url!}
                 alt={book.title}
+                width={320}
+                height={192}
                 className="w-full h-48 object-cover"
               />
             ) : (

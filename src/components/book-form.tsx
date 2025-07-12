@@ -4,18 +4,9 @@ import { useForm, Controller } from "react-hook-form";
 import { supabase } from "@/lib/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
+import Image from "next/image";
 
-export type BookFormValues = {
-  id?: number;
-  cover?: FileList;
-  isbn?: string;
-  title: string;
-  author: string;
-  edition?: string;
-  condition?: string;
-  notes?: string;
-  cover_url?: string;
-};
+import type { BookFormValues } from "@/types";
 
 interface BookFormProps {
   defaultValues?: Partial<BookFormValues>;
@@ -54,16 +45,16 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
       }
       // Search OpenLibrary API by title/author
       if (title || author) {
-        const q = [title, author].filter(Boolean).join(" ");
+        // Removed unused variable 'q' (was: const q = [title, author].filter(Boolean).join(" ");)
         const res = await fetch(`https://openlibrary.org/search.json?${title ? `title=${encodeURIComponent(title)}` : ""}${title && author ? "&" : ""}${author ? `author=${encodeURIComponent(author)}` : ""}`);
         const data = await res.json();
         if (data.docs && Array.isArray(data.docs)) {
-          data.docs.slice(0, 8).forEach((doc: any) => {
+          data.docs.slice(0, 8).forEach((doc: Record<string, unknown>) => {
             if (doc.cover_i) {
               covers.push(`https://covers.openlibrary.org/b/id/${doc.cover_i}-L.jpg`);
             }
             if (doc.isbn && Array.isArray(doc.isbn)) {
-              doc.isbn.slice(0, 2).forEach((isbn: string) => {
+              (doc.isbn as string[]).slice(0, 2).forEach((isbn: string) => {
                 covers.push(`https://covers.openlibrary.org/b/isbn/${isbn}-L.jpg`);
               });
             }
@@ -89,7 +80,7 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
     return publicUrlData.publicUrl;
   }
 
-  const fetchMetadata = async (isbn: string) => {
+  const fetchMetadata = async (isbn: string): Promise<void> => {
     if (!isbn) return;
     try {
       const res = await fetch(
@@ -109,7 +100,7 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
     }
   };
 
-  const onSubmit = async (data: BookFormValues) => {
+  const onSubmit = async (data: BookFormValues): Promise<void> => {
     try {
       let cover_url: string | null = null;
       if (selectedCoverUrl) {
@@ -157,7 +148,11 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
       onSuccess();
     } catch (err: any) {
       console.error(err);
-      alert("Error adding book: " + err.message);
+      if (err instanceof Error) {
+        alert("Error adding book: " + err.message);
+      } else {
+        alert("Error adding book");
+      }
     }
   };
 
@@ -196,10 +191,12 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
           {coverResults.length > 0 && (
             <div className="grid grid-cols-4 gap-2">
               {coverResults.map((url: string) => (
-                <img
+                <Image
                   key={url}
                   src={url}
                   alt="OpenLibrary cover"
+                  width={80}
+                  height={112}
                   className={`w-20 h-28 object-cover border-2 rounded cursor-pointer ${selectedCoverUrl === url ? "border-blue-500 ring-2 ring-blue-400" : "border-gray-200"}`}
                   onClick={() => setSelectedCoverUrl(url)}
                   style={{ opacity: selectedCoverUrl && selectedCoverUrl !== url ? 0.5 : 1 }}
@@ -211,7 +208,7 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
             <div className="mt-2">
               <span className="text-xs text-green-700">Selected cover will be used.</span>
               <div>
-                <img src={selectedCoverUrl} alt="Selected cover" className="w-24 h-32 mt-1 rounded shadow" />
+                <Image src={selectedCoverUrl} alt="Selected cover" width={96} height={128} className="w-24 h-32 mt-1 rounded shadow" />
               </div>
             </div>
           )}

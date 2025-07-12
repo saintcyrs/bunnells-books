@@ -7,7 +7,7 @@ export default function Navbar() {
         <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-8">
             <Link href="/" className="text-xl font-bold text-blue-700 hover:text-blue-900">
-              Bunnell's Books
+              Bunnell&apos;s Books
             </Link>
             <div className="hidden md:flex gap-6">
               <Link href="/search" className="text-gray-700 hover:text-blue-700 transition-colors">
