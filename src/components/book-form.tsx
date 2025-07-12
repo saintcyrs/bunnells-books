@@ -6,7 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
 
-import type { BookFormValues } from "@/types";
+import type { BookFormValues, OpenLibraryBookAuthor } from "@/types";
 
 interface BookFormProps {
   defaultValues?: Partial<BookFormValues>;
@@ -62,7 +62,7 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
         }
       }
     } catch (err) {
-      console.error("OpenLibrary search failed", err);
+      console.error("OpenLibrary search failed", err as Error);
     }
     // Remove duplicates
     covers = Array.from(new Set(covers));
@@ -74,10 +74,10 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
     const ext = file.name.split(".").pop();
     const id = crypto.randomUUID();
     const path = `covers/${id}.${ext}`;
-    const { data, error: uploadError } = await supabase.storage.from("covers").upload(path, file);
+    const { error: uploadError } = await supabase.storage.from("covers").upload(path, file);
     if (uploadError) throw uploadError;
-    const { data: publicUrlData } = supabase.storage.from("covers").getPublicUrl(path);
-    return publicUrlData.publicUrl;
+    const publicUrlData = supabase.storage.from("covers").getPublicUrl(path);
+    return publicUrlData.data.publicUrl;
   }
 
   const fetchMetadata = async (isbn: string): Promise<void> => {
@@ -92,11 +92,11 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
         setValue("title", book.title);
         setValue(
           "author",
-          book.authors?.map((a: any) => a.name).join(", ") || ""
+          book.authors?.map((a: OpenLibraryBookAuthor) => a.name).join(", ") || ""
         );
       }
     } catch (err) {
-      console.error("Lookup failed:", err);
+      console.error("Lookup failed:", err as Error);
     }
   };
 
@@ -112,7 +112,7 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
       let error;
       if (data.id) {
         // Editing existing book
-        const updateFields: any = {
+        const updateFields: BookFormValues = {
           isbn: data.isbn,
           title: data.title,
           author: data.author,
@@ -146,12 +146,9 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
       setCoverResults([]);
       queryClient.invalidateQueries({ queryKey: ["books"] });
       onSuccess();
-    } catch (err: any) {
-      console.error(err);
+    } catch (err: unknown) {
       if (err instanceof Error) {
-        alert("Error adding book: " + err.message);
-      } else {
-        alert("Error adding book");
+        console.error(err);
       }
     }
   };

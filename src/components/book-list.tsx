@@ -46,7 +46,7 @@ export function BookList() {
   });
 
   if (isLoading) return <p className="text-center">Loading…</p>;
-  if (error) return <p className="text-red-500 text-center">Error: {(error as any).message}</p>;
+  if (error) return <p className="text-red-500 text-center">Error: {(error as Error).message}</p>;
 
   return (
     <>
