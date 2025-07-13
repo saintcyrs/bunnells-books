@@ -3,13 +3,15 @@
 import Link from "next/link";
 
 import { useState } from "react";
+import SearchBox from "./search-box";
+
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
     <nav className="bg-white shadow sticky top-0 z-50">
       <div className="max-w-5xl px-4 sm:px-6 lg:px-8">
-        <div className="flex h-16 items-center">
+        <div className="flex h-16 items-center justify-between">
           <div className="flex items-center gap-4 sm:gap-8">
             <Link href="/" className="text-xl font-bold text-blue-700 hover:text-blue-900 whitespace-nowrap">
               Bunnell&apos;s Books
@@ -19,9 +21,11 @@ export default function Navbar() {
                 Search & Import
               </Link>
               <Link href="/collection" className="text-gray-700 hover:text-blue-700 transition-colors">
-                  Library
-                </Link>
-              </div>
+                My Library
+              </Link>
+            </div>
+            <div className="hidden md:block ml-auto">
+              <SearchBox />
             </div>
             <button
               className="md:hidden ml-auto p-2 text-gray-700 hover:text-blue-700 focus:outline-none"
@@ -44,6 +48,7 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+        </div>
         </div>
       </nav>
     );

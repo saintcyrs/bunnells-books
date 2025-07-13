@@ -19,7 +19,7 @@ export default function BooksTable() {
     },
   });
 
-  const [search, setSearch] = useState("");
+
   const [sortKey, setSortKey] = useState<keyof Book | null>(null);
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   const [editingBook, setEditingBook] = useState<Partial<Book> | null>(null);
@@ -38,16 +38,8 @@ export default function BooksTable() {
     return booksToSort;
   }, [books, sortKey, sortDirection]);
 
-  const filteredBooks = useMemo(() => {
-    const q = search.trim().toLowerCase();
-    if (!q) return books;
-    return books.filter(
-      (book) =>
-        book.title.toLowerCase().includes(q) ||
-        book.author.toLowerCase().includes(q) ||
-        (book.isbn ? book.isbn.toLowerCase().includes(q) : false)
-    );
-  }, [books, search]);
+  // No filtering, just show all books
+  const filteredBooks = books;
 
   function handleSort(key: keyof Book) {
     if (sortKey === key) {
@@ -71,13 +63,6 @@ export default function BooksTable() {
     <section className="w-full max-w-4xl mx-auto mt-8 bg-white rounded shadow p-4">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <h2 className="text-xl font-bold">My Books</h2>
-        <input
-          type="text"
-          className="border rounded px-3 py-2 w-full sm:w-64"
-          placeholder="Search by title, author, or ISBN..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
       </div>
       {isLoading ? (
         <div className="text-center py-8 text-gray-500">Loading books...</div>

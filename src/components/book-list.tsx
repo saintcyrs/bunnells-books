@@ -8,7 +8,11 @@ import type { Book, BookFormValues } from "@/types";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 
-export function BookList() {
+interface BookListProps {
+  search?: string;
+}
+
+export function BookList({ search = "" }: BookListProps) {
   // Track natural image sizes by book id
   const [imageSizes, setImageSizes] = useState<Record<number, { width: number; height: number }>>({});
   const queryClient = useQueryClient();
@@ -53,10 +57,21 @@ export function BookList() {
   if (isLoading) return <p className="text-center text-sm sm:text-base">Loading…</p>;
   if (error) return <p className="text-red-500 text-center text-sm sm:text-base">Error: {(error as Error).message}</p>;
 
+  // Filter books by search
+  const filteredBooks = (data || []).filter(book => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      book.title.toLowerCase().includes(q) ||
+      book.author.toLowerCase().includes(q) ||
+      (book.isbn ? book.isbn.toLowerCase().includes(q) : false)
+    );
+  });
+
   return (
     <>
       <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {data!.map((book: Book) => (
+        {filteredBooks.map((book: Book) => (
           <div
             key={book.id}
             className="bg-white rounded shadow overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01] active:scale-95"
