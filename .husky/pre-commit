@@ -1,1 +1,27 @@
-npm run lint
+# Add common paths to PATH
+export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+# Try to load nvm if it exists
+if [ -f "$HOME/.nvm/nvm.sh" ]; then
+    . "$HOME/.nvm/nvm.sh"
+    nvm use >/dev/null 2>&1 || true
+fi
+
+# Use local node_modules/.bin if it exists
+if [ -d "./node_modules/.bin" ]; then
+    export PATH="./node_modules/.bin:$PATH"
+fi
+
+# Debug info
+
+# Run linting
+npm run lint || {
+    echo "❌ Linting failed"
+    exit 1
+}
+
+# Run type checking
+npx tsc --noEmit || {
+    echo "❌ Type checking failed"
+    exit 1
+}
