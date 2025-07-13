@@ -3,30 +3,35 @@
 import Link from "next/link";
 
 import { useState } from "react";
+import SearchBox from "./search-box";
+
 
 export default function Navbar() {
   const [mobileOpen, setMobileOpen] = useState(false);
   return (
-    <nav className="bg-[#101C42] text-white shadow sticky top-0 z-50">
-      <div className="max-w-5xl px-4 sm:px-6 lg:px-8 mx-auto">
+    <nav className="bg-white shadow sticky top-0 z-50">
+      <div className="max-w-5xl px-4 sm:px-6 lg:px-8">
         <div className="flex h-16 items-center justify-between">
-          <Link href="/" className="text-xl font-eb-garamond text-white hover:text-blue-200 whitespace-nowrap">
-            Bunnell&apos;s Books
-          </Link>
-          
-          <div className="hidden md:flex items-center gap-6">
-            <Link href="/search" className="text-white hover:text-blue-200 transition-colors">
-              Search & Import
+          <div className="flex items-center gap-4 sm:gap-8">
+            <Link href="/" className="text-xl font-bold text-blue-700 hover:text-blue-900 whitespace-nowrap">
+              Bunnell&apos;s Books
             </Link>
-            <Link href="/collection" className="text-white hover:text-blue-200 transition-colors">
-              Library
-            </Link>
-          </div>
-          <button
-            className="md:hidden p-2 text-white hover:text-blue-200 focus:outline-none"
-            aria-label="Open main menu"
-            onClick={() => setMobileOpen((v) => !v)}
-          >
+            <div className="hidden md:flex gap-6">
+              <Link href="/search" className="text-gray-700 hover:text-blue-700 transition-colors">
+                Search & Import
+              </Link>
+              <Link href="/collection" className="text-gray-700 hover:text-blue-700 transition-colors">
+                My Library
+              </Link>
+            </div>
+            <div className="hidden md:block ml-auto">
+              <SearchBox />
+            </div>
+            <button
+              className="md:hidden ml-auto p-2 text-gray-700 hover:text-blue-700 focus:outline-none"
+              aria-label="Open main menu"
+              onClick={() => setMobileOpen((v) => !v)}
+            >
               <svg className="h-6 w-6" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
               </svg>
@@ -43,6 +48,7 @@ export default function Navbar() {
               </Link>
             </div>
           )}
+        </div>
         </div>
       </nav>
     );

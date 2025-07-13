@@ -9,10 +9,10 @@ import Image from "next/image";
 import Button from "@/components/ui/Button";
 
 interface BookListProps {
-  searchQuery?: string;
+  search?: string;
 }
 
-export function BookList({ searchQuery = "" }: BookListProps) {
+export function BookList({ search = "" }: BookListProps) {
   // Track natural image sizes by book id
   const [imageSizes, setImageSizes] = useState<Record<number, { width: number; height: number }>>({});
   const queryClient = useQueryClient();
@@ -42,7 +42,7 @@ export function BookList({ searchQuery = "" }: BookListProps) {
     },
   });
 
-  const { data: allBooks, isLoading, error } = useQuery<Book[]>({
+  const { data, isLoading, error } = useQuery<Book[]>({
     queryKey: ["books"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -54,25 +54,25 @@ export function BookList({ searchQuery = "" }: BookListProps) {
     },
   });
 
-  // Filter books based on search query
-  const filteredBooks = allBooks?.filter(book => {
-    if (!searchQuery) return true;
-    const query = searchQuery.toLowerCase();
-    return (
-      book.title.toLowerCase().includes(query) ||
-      (book.author && book.author.toLowerCase().includes(query)) ||
-      (book.isbn && book.isbn.toLowerCase().includes(query))
-    );
-  }) || [];
+  if (isLoading) return <p className="text-center text-sm sm:text-base">Loading…</p>;
+  if (error) return <p className="text-red-500 text-center text-sm sm:text-base">Error: {(error as Error).message}</p>;
 
-  if (isLoading) return <div className="p-4">Loading...</div>;
-  if (error) return <div className="p-4 text-red-600">Error loading books</div>;
+  // Filter books by search
+  const filteredBooks = (data || []).filter(book => {
+    const q = search.trim().toLowerCase();
+    if (!q) return true;
+    return (
+      book.title.toLowerCase().includes(q) ||
+      book.author.toLowerCase().includes(q) ||
+      (book.isbn ? book.isbn.toLowerCase().includes(q) : false)
+    );
+  });
 
   return (
     <div className="space-y-4">
       {filteredBooks.length === 0 ? (
         <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow">
-          {searchQuery ? 'No books match your search.' : 'No books found.'}
+          {search ? 'No books match your search.' : 'No books found.'}
         </div>
       ) : (
         <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">

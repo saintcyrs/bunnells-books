@@ -56,7 +56,7 @@ export default function CollectionPage() {
         </div>
       )}
 
-      <BookList key={refreshKey} searchQuery={searchQuery} />
+      <BookList key={refreshKey} search={searchQuery} />
     </div>
   );
 }

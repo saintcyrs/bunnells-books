@@ -162,7 +162,9 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
   return (
     <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 sm:p-8 w-full max-w-md mx-auto max-w-[90vw] max-h-[90vh] overflow-auto">
       <Fieldset>
-        <Legend className="block text-2xl font-bold text-center mb-6 py-2">Add a book</Legend>
+        <Legend className="block text-2xl font-bold text-center mb-6 py-2">
+  {defaultValues && defaultValues.title ? `Editing ${defaultValues.title}` : "Add a book"}
+</Legend>
         {/* ISBN */}
         <Field className="mb-3">
           <Label htmlFor="isbn">ISBN</Label>
