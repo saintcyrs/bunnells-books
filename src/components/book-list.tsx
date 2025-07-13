@@ -8,7 +8,11 @@ import type { Book, BookFormValues } from "@/types";
 import Image from "next/image";
 import Button from "@/components/ui/Button";
 
-export function BookList() {
+interface BookListProps {
+  searchQuery?: string;
+}
+
+export function BookList({ searchQuery = "" }: BookListProps) {
   // Track natural image sizes by book id
   const [imageSizes, setImageSizes] = useState<Record<number, { width: number; height: number }>>({});
   const queryClient = useQueryClient();
@@ -38,7 +42,7 @@ export function BookList() {
     },
   });
 
-  const { data, isLoading, error } = useQuery<Book[]>({
+  const { data: allBooks, isLoading, error } = useQuery<Book[]>({
     queryKey: ["books"],
     queryFn: async () => {
       const { data, error } = await supabase
@@ -50,73 +54,92 @@ export function BookList() {
     },
   });
 
-  if (isLoading) return <p className="text-center text-sm sm:text-base">Loading…</p>;
-  if (error) return <p className="text-red-500 text-center text-sm sm:text-base">Error: {(error as Error).message}</p>;
+  // Filter books based on search query
+  const filteredBooks = allBooks?.filter(book => {
+    if (!searchQuery) return true;
+    const query = searchQuery.toLowerCase();
+    return (
+      book.title.toLowerCase().includes(query) ||
+      (book.author && book.author.toLowerCase().includes(query)) ||
+      (book.isbn && book.isbn.toLowerCase().includes(query))
+    );
+  }) || [];
+
+  if (isLoading) return <div className="p-4">Loading...</div>;
+  if (error) return <div className="p-4 text-red-600">Error loading books</div>;
 
   return (
-    <>
-      <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
-        {data!.map((book: Book) => (
-          <div
-            key={book.id}
-            className="bg-white rounded shadow overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01] active:scale-95"
-            onClick={() => handleEdit(book)}
-          >
-            <button
-              className="absolute top-2 right-2 z-10 p-1 bg-red-600 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity"
-              title="Delete book"
-              onClick={async (e) => {
-                e.stopPropagation();
-                if (window.confirm(`Are you sure you want to delete “${book.title}”? This cannot be undone.`)) {
-                  deleteMutation.mutate(book.id);
-                }
-              }}
-              disabled={deleteMutation.isPending}
+    <div className="space-y-4">
+      {filteredBooks.length === 0 ? (
+        <div className="p-8 text-center text-gray-500 bg-white rounded-lg shadow">
+          {searchQuery ? 'No books match your search.' : 'No books found.'}
+        </div>
+      ) : (
+        <div className="grid gap-4 xs:grid-cols-1 sm:grid-cols-2 lg:grid-cols-3">
+          {filteredBooks.map((book) => (
+            <div
+              key={book.id}
+              className="bg-white rounded-lg shadow overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01] active:scale-95"
+              onClick={() => handleEdit(book)}
             >
-              &#128465;
-            </button>
-            {book.cover_url ? (
-              <div
-                style={{
-                  width: 200,
-                  height: imageSizes[book.id]?.height
-                    ? (200 * imageSizes[book.id].height) / imageSizes[book.id].width
-                    : 300, // fallback to 2:3 aspect ratio
-                  overflow: "hidden",
-                  margin: "0 auto",
+              <button
+                className="absolute top-2 right-2 z-10 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                title="Delete book"
+                onClick={async (e) => {
+                  e.stopPropagation();
+                  if (window.confirm(`Are you sure you want to delete "${book.title}"? This cannot be undone.`)) {
+                    deleteMutation.mutate(book.id);
+                  }
                 }}
-                className="bg-gray-100 rounded-t flex items-center justify-center"
+                disabled={deleteMutation.isPending}
               >
-                <Image
-                  src={book.cover_url!}
-                  alt={book.title}
-                  width={imageSizes[book.id]?.width || 200}
-                  height={imageSizes[book.id]?.height || 300}
-                  className="object-contain w-full h-full"
-                  onLoadingComplete={(img) => {
-                    setImageSizes((prev) => ({
-                      ...prev,
-                      [book.id]: {
-                        width: img.naturalWidth,
-                        height: img.naturalHeight,
-                      },
-                    }));
+                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
+                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
+                </svg>
+              </button>
+              {book.cover_url ? (
+                <div
+                  style={{
+                    width: 200,
+                    height: imageSizes[book.id]?.height
+                      ? (200 * imageSizes[book.id].height) / imageSizes[book.id].width
+                      : 300,
+                    overflow: "hidden",
+                    margin: "0 auto",
                   }}
-                />
+                  className="bg-gray-100 rounded-t flex items-center justify-center"
+                >
+                  <Image
+                    src={book.cover_url!}
+                    alt={book.title}
+                    width={imageSizes[book.id]?.width || 200}
+                    height={imageSizes[book.id]?.height || 300}
+                    className="object-contain w-full h-full"
+                    onLoadingComplete={(img) => {
+                      setImageSizes((prev) => ({
+                        ...prev,
+                        [book.id]: {
+                          width: img.naturalWidth,
+                          height: img.naturalHeight,
+                        },
+                      }));
+                    }}
+                  />
+                </div>
+              ) : (
+                <div className="w-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm" style={{ height: 300, width: 200, margin: "0 auto" }}>
+                  No Cover
+                </div>
+              )}
+              <div className="p-4">
+                <h3 className="font-semibold text-base text-gray-900 line-clamp-2">{book.title}</h3>
+                <p className="text-sm text-gray-600 mt-1">{book.author}</p>
+                {book.isbn && <p className="text-xs text-gray-500 mt-2">ISBN: {book.isbn}</p>}
               </div>
-            ) : (
-              <div className="w-full bg-gray-200 flex items-center justify-center text-gray-500 text-sm" style={{ height: 300, width: 200, margin: "0 auto", borderRadius: "0.5rem" }}>
-                No Cover
-              </div>
-            )}
-            <div className="p-3 sm:p-4">
-              <h3 className="font-semibold text-base sm:text-lg">{book.title}</h3>
-              <p className="text-xs sm:text-sm text-gray-600">{book.author}</p>
-              {book.isbn && <p className="text-xs mt-2">ISBN: {book.isbn}</p>}
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      )}
       {editingBook && (
         <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-40 z-50 p-2 sm:p-0">
           <div className="bg-white rounded shadow-lg max-w-md w-full relative">
@@ -134,7 +157,8 @@ export function BookList() {
                   size="md"
                   className="w-full"
                   disabled={deleteMutation.isPending}
-                  onClick={async () => {
+                  onClick={async (e) => {
+                    e.preventDefault();
                     if (window.confirm("Are you sure you want to delete this book? This cannot be undone.")) {
                       await deleteMutation.mutateAsync(editingBook.id!);
                       handleClose();
@@ -148,6 +172,6 @@ export function BookList() {
           </div>
         </div>
       )}
-    </>
+    </div>
   );
 }

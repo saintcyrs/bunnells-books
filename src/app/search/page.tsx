@@ -33,7 +33,7 @@ export default function SearchPage() {
 
   return (
     <>
-    <div className="p-3 sm:p-6 max-w-lg mx-auto w-full">
+    <div className="p-3 sm:p-6 max-w-lg mx-auto w-full bg-white min-h-screen">
       <h1 className="text-xl sm:text-2xl font-bold mb-4">Search & Import</h1>
       <div className="flex flex-col sm:flex-row gap-2 mb-4">
         <input

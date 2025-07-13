@@ -122,7 +122,7 @@ export default function BooksTable() {
       )}
     </section>
     {editingBook && (
-      <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-40 z-50 p-2 sm:p-0">
+      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-40 z-50 p-2 sm:p-0">
         <div className="bg-white rounded shadow-lg max-w-md w-full relative">
           <button
             className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl"

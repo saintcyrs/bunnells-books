@@ -25,3 +25,4 @@ npx tsc --noEmit || {
     echo "❌ Type checking failed"
     exit 1
 }
+
