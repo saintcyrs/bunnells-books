@@ -6,6 +6,7 @@ import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
 import { Field, Fieldset, Input, Label, Legend, Textarea, Menu, MenuButton, MenuItem, MenuItems, Button as HButton } from '@headlessui/react'
+import Button from "@/components/ui/Button";
 import { BookFormValues, OpenLibraryBookAuthor } from "@/types";
 
 
@@ -159,9 +160,9 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-3 sm:p-6 w-full max-w-md mx-auto">
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-4 sm:p-8 w-full max-w-md mx-auto max-w-[90vw] max-h-[90vh] overflow-auto">
       <Fieldset>
-        <Legend>Add a book</Legend>
+        <Legend className="block text-2xl font-bold text-center mb-6 py-2">Add a book</Legend>
         {/* ISBN */}
         <Field className="mb-3">
           <Label htmlFor="isbn">ISBN</Label>
@@ -314,13 +315,15 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
             rows={3}
           />
         </Field>
-        <HButton
-          type="submit"
-          className="w-full"
-          disabled={isSubmitting}
-        >
-          {isSubmitting ? "Saving…" : defaultValues ? "Save Changes" : "Add Book"}
-        </HButton>
+        <Button
+  type="submit"
+  variant="primary"
+  size="md"
+  className="w-full py-3"
+  disabled={isSubmitting}
+>
+  {isSubmitting ? "Saving…" : defaultValues ? "Save Changes" : "Add Book"}
+</Button>
         {children}
       </Fieldset>
     </form>

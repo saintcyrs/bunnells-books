@@ -10,7 +10,6 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false);
   const [showForm, setShowForm] = useState(false);
   const [formDefaultValues, setFormDefaultValues] = useState<Partial<BookFormValues>>({});
-
   const lookup = async (): Promise<void> => {
     if (!isbn) return;
     setLoading(true);
