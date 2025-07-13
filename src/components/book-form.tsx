@@ -5,15 +5,17 @@ import { supabase } from "@/lib/supabaseClient";
 import { useQueryClient } from "@tanstack/react-query";
 import { useState } from "react";
 import Image from "next/image";
+import { Field, Fieldset, Input, Label, Legend, Textarea, Menu, MenuButton, MenuItem, MenuItems, Button as HButton } from '@headlessui/react'
+import { BookFormValues, OpenLibraryBookAuthor } from "@/types";
 
-import type { BookFormValues, OpenLibraryBookAuthor } from "@/types";
+
 
 interface BookFormProps {
   defaultValues?: Partial<BookFormValues>;
   onSuccess: () => void;
 }
 
-export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
+export function BookForm({ defaultValues, onSuccess, children }: React.PropsWithChildren<BookFormProps>) {
   const queryClient = useQueryClient();
   const {
     register,
@@ -112,7 +114,8 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
       let error;
       if (data.id) {
         // Editing existing book
-        const updateFields: BookFormValues = {
+        // Only include cover_url in update if a new cover was selected or uploaded
+        const updateFields: Partial<BookFormValues> = {
           isbn: data.isbn,
           title: data.title,
           author: data.author,
@@ -120,7 +123,9 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
           condition: data.condition,
           notes: data.notes,
         };
-        if (cover_url) updateFields.cover_url = cover_url;
+        if (cover_url !== null && cover_url !== undefined) {
+          updateFields.cover_url = cover_url;
+        }
         ({ error } = await supabase
           .from("books")
           .update(updateFields)
@@ -154,140 +159,170 @@ export function BookForm({ defaultValues, onSuccess }: BookFormProps) {
   };
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-6 bg-white rounded shadow">
-      <div>
-        <label className="block text-sm font-medium">Cover Image</label>
-        <input
-          {...register("cover")}
-          type="file"
-          accept="image/*"
-          className="mt-1 block w-full"
-          onChange={() => setSelectedCoverUrl(null)}
-        />
-        <div className="mt-2">
-          <label className="block text-xs font-medium mb-1">Or search OpenLibrary for a cover:</label>
-          <div className="flex gap-2 mb-2">
-            <button
-              type="button"
-              className="px-2 py-1 bg-gray-200 rounded text-xs"
-              onClick={searchOpenLibraryCovers}
-              disabled={searching}
-            >
-              {searching ? "Searching..." : "Search"}
-            </button>
-            {selectedCoverUrl && (
-              <button
+    <form onSubmit={handleSubmit(onSubmit)} className="space-y-4 p-3 sm:p-6 w-full max-w-md mx-auto">
+      <Fieldset>
+        <Legend>Add a book</Legend>
+        {/* ISBN */}
+        <Field className="mb-3">
+          <Label htmlFor="isbn">ISBN</Label>
+          <Input
+            id="isbn"
+            {...register("isbn", { pattern: /^[0-9\-]+$/ })}
+            onBlur={() => fetchMetadata(getValues("isbn") || "")}
+            className="mt-1 block w-full border rounded p-2"
+            placeholder="978-..."
+          />
+          {errors.isbn && <p className="text-xs text-red-500">Invalid ISBN</p>}
+        </Field>
+        {/* Cover Upload & OpenLibrary Search */}
+        <Field className="mb-3">
+          <Label>Cover Image</Label>
+          <label className="inline-block mt-1 px-3 py-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 px-2 py-1 bg-gray-200 rounded text-sm">
+            <Input
+              type="file"
+              accept="image/*"
+              {...register("cover")}
+              className="hidden"
+              onChange={() => setSelectedCoverUrl(null)}
+            />
+            Upload Image
+          </label>
+          <div className="mt-2">
+            <div className="bg-yellow-100 text-yellow-800 px-2 py-1 rounded mb-2 text-xs">
+              You must enter an ISBN to use OpenLibrary cover search.
+            </div>
+            <Label className="block text-xs font-medium mb-1">Or search OpenLibrary for a cover:</Label>
+            <div className="flex gap-2 mb-2">
+              <HButton
                 type="button"
-                className="px-2 py-1 bg-red-200 rounded text-xs text-red-800"
-                onClick={() => setSelectedCoverUrl(null)}
+                className="px-2 py-1 bg-gray-200 rounded text-sm"
+                onClick={searchOpenLibraryCovers}
+                disabled={searching || !getValues("isbn")}
               >
-                Clear selected cover
-              </button>
+                {searching ? "Searching..." : "Search"}
+              </HButton>
+              {selectedCoverUrl && (
+                <HButton
+                  type="button"
+                  className="px-2 py-1 bg-red-200 rounded text-xs text-red-800"
+                  onClick={() => setSelectedCoverUrl(null)}
+                >
+                  Clear selected cover
+                </HButton>
+              )}
+            </div>
+            {coverResults.length > 0 && (
+              <div className="grid grid-cols-4 gap-2">
+                {coverResults.map((url: string) => (
+                  <Image
+                    key={url}
+                    src={url}
+                    alt="OpenLibrary cover"
+                    width={80}
+                    height={112}
+                    className={`w-20 h-28 object-cover border-2 rounded cursor-pointer ${selectedCoverUrl === url ? "border-blue-500 ring-2 ring-blue-400" : "border-gray-200"}`}
+                    onClick={() => setSelectedCoverUrl(url)}
+                    style={{ opacity: selectedCoverUrl && selectedCoverUrl !== url ? 0.5 : 1 }}
+                  />
+                ))}
+              </div>
+            )}
+            {selectedCoverUrl && (
+              <div className="mt-2">
+                <span className="text-xs text-green-700">Selected cover will be used.</span>
+                <div>
+                  <Image src={selectedCoverUrl} alt="Selected cover" width={96} height={128} className="w-24 h-32 mt-1 rounded shadow" />
+                </div>
+              </div>
             )}
           </div>
-          {coverResults.length > 0 && (
-            <div className="grid grid-cols-4 gap-2">
-              {coverResults.map((url: string) => (
-                <Image
-                  key={url}
-                  src={url}
-                  alt="OpenLibrary cover"
-                  width={80}
-                  height={112}
-                  className={`w-20 h-28 object-cover border-2 rounded cursor-pointer ${selectedCoverUrl === url ? "border-blue-500 ring-2 ring-blue-400" : "border-gray-200"}`}
-                  onClick={() => setSelectedCoverUrl(url)}
-                  style={{ opacity: selectedCoverUrl && selectedCoverUrl !== url ? 0.5 : 1 }}
-                />
-              ))}
-            </div>
-          )}
-          {selectedCoverUrl && (
-            <div className="mt-2">
-              <span className="text-xs text-green-700">Selected cover will be used.</span>
-              <div>
-                <Image src={selectedCoverUrl} alt="Selected cover" width={96} height={128} className="w-24 h-32 mt-1 rounded shadow" />
-              </div>
-            </div>
-          )}
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">ISBN (optional)</label>
-        <input
-          {...register("isbn", { pattern: /^[0-9\-]+$/ })}
-          onBlur={() => fetchMetadata(getValues("isbn") || "")}
-          className="mt-1 block w-full border rounded p-2"
-          placeholder="978-..."
-        />
-        {errors.isbn && <p className="text-xs text-red-500">Invalid ISBN</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Title</label>
-        <input
-          {...register("title", { required: "Title is required" })}
-          className="mt-1 block w-full border rounded p-2"
-          placeholder="Book Title"
-        />
-        {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium">Author</label>
-        <input
-          {...register("author", { required: "Author is required" })}
-          className="mt-1 block w-full border rounded p-2"
-          placeholder="Author Name"
-        />
-        {errors.author && <p className="text-xs text-red-500">{errors.author.message}</p>}
-      </div>
-
-      <div className="grid grid-cols-2 gap-4">
-        <div>
-          <label className="block text-sm">Edition</label>
-          <input
-            {...register("edition")}
+        </Field>
+        {/* Title */}
+        <Field className="mb-3">
+          <Label htmlFor="title">Title</Label>
+          <Input
+            id="title"
+            {...register("title", { required: "Title is required" })}
             className="mt-1 block w-full border rounded p-2"
+            placeholder="Book Title"
           />
-        </div>
-        <div>
-          <label className="block text-sm">Condition</label>
-          <Controller
-            name="condition"
-            control={control}
-            render={({ field }) => (
-              <select
-                {...field}
-                className="mt-1 block w-full border rounded p-2"
-              >
-                <option value="">– select –</option>
-                <option>Like New</option>
-                <option>Very Good</option>
-                <option>Good</option>
-                <option>Acceptable</option>
-              </select>
-            )}
+          {errors.title && <p className="text-xs text-red-500">{errors.title.message}</p>}
+        </Field>
+        {/* Author */}
+        <Field className="mb-3">
+          <Label htmlFor="author">Author</Label>
+          <Input
+            id="author"
+            {...register("author", { required: "Author is required" })}
+            className="mt-1 block w-full border rounded p-2"
+            placeholder="Author Name"
           />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm">Notes</label>
-        <textarea
-          {...register("notes")}
-          className="mt-1 block w-full border rounded p-2"
-          rows={3}
-        />
-      </div>
-
-      <button
-        type="submit"
-        disabled={isSubmitting}
-        className="w-full px-4 py-2 bg-blue-600 text-white rounded hover:bg-blue-700"
+          {errors.author && <p className="text-xs text-red-500">{errors.author.message}</p>}
+        </Field>
+        {/* Edition & Condition */}
+        <div className="mb-3">
+  <Field>
+    <Label htmlFor="edition">Edition</Label>
+    <Input
+      id="edition"
+      {...register("edition")}
+      className="mt-1 block w-full border rounded p-2"
+    />
+  </Field>
+</div>
+<div className="mb-3">
+  <Field>
+    <Label htmlFor="condition">Condition</Label>
+    <Controller
+      control={control}
+      name="condition"
+      defaultValue="Like New"
+      render={({ field: { value, onChange } }) => (
+        <Menu>
+          <MenuButton as={HButton} className="w-full border rounded p-2 text-left">
+            {value || 'Like New'}
+          </MenuButton>
+          <MenuItems className="mt-2 w-full bg-white shadow-lg rounded-lg">
+            {['Like New', 'Very Good', 'Good', 'Acceptable'].map((option) => (
+  <MenuItem key={option}>
+    {({ active }) => (
+      <HButton
+        className={`group flex w-full items-center gap-2 rounded-lg px-3 py-1.5 focus:outline-none focus:ring-2 focus:ring-blue-500${
+          value === option ? ' bg-blue-100' : ''
+        }${active ? ' bg-blue-50' : ''}`}
+        type="button"
+        onClick={() => onChange(option)}
       >
-        {isSubmitting ? "Saving…" : defaultValues ? "Save Changes" : "Add Book"}
-      </button>
+        {option}
+        <kbd className="ml-auto hidden font-sans text-xs text-white/50 group-data-focus:inline">⌘E</kbd>
+      </HButton>
+    )}
+  </MenuItem>
+))}
+          </MenuItems>
+        </Menu>
+      )}
+    />
+  </Field>
+</div>
+        <Field className="mb-3">
+          <Label htmlFor="notes">Notes</Label>
+          <Textarea
+            id="notes"
+            {...register("notes")}
+            className="mt-1 block w-full border rounded p-2"
+            rows={3}
+          />
+        </Field>
+        <HButton
+          type="submit"
+          className="w-full"
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Saving…" : defaultValues ? "Save Changes" : "Add Book"}
+        </HButton>
+        {children}
+      </Fieldset>
     </form>
   );
 }

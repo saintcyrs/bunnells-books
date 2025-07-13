@@ -1,17 +1,11 @@
-import Link from "next/link";
+
+import BooksTable from "./page-table";
 
 export default function Home() {
   return (
-    <main className="min-h-screen flex flex-col items-center justify-center bg-gray-50">
-      <h1 className="text-4xl font-bold mb-6">Bunnell&apos;s Books</h1>
-      <div className="space-x-4">
-        <Link href="/collection" className="px-4 py-2 bg-blue-600 text-white rounded">
-          View My Library
-        </Link>
-        <Link href="/search" className="px-4 py-2 bg-green-600 text-white rounded">
-          Search & Import
-        </Link>
-      </div>
+    <main className="min-h-screen flex flex-col items-center bg-gray-50 p-3 sm:p-0">
+      <h1 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-center">Bunnell&apos;s Books</h1>
+      <BooksTable />
     </main>
   );
 }
