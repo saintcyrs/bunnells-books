@@ -141,21 +141,24 @@ export function BookList({ search = "" }: BookListProps) {
         </div>
       )}
       {editingBook && (
-        <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-40 z-50 p-2 sm:p-0">
-          <div className="bg-white rounded shadow-lg max-w-md w-full relative">
+        <div className="fixed inset-0 flex items-start justify-center bg-white/75 backdrop-blur-sm z-50 p-2 pt-16 overflow-y-auto">
+          <div className="bg-white rounded-lg shadow-xl w-full max-w-md relative my-4 border border-gray-100">
             <button
-              className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl"
+              className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl z-10"
               onClick={handleClose}
               title="Close"
             >
               &times;
             </button>
-            <BookForm defaultValues={editingBook} onSuccess={handleClose}>
-              <div className="flex justify-center gap-2 px-6 pb-4">
+            <BookForm 
+              defaultValues={editingBook} 
+              onSuccess={handleClose}
+            >
+              <div className="flex justify-center gap-2 pt-2">
                 <Button
                   variant="danger"
                   size="md"
-                  className="w-full"
+                  className="w-full py-3"
                   disabled={deleteMutation.isPending}
                   onClick={async (e) => {
                     e.preventDefault();

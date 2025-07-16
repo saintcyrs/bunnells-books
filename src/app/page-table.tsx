@@ -1,12 +1,29 @@
 "use client";
 
-import { useQuery } from "@tanstack/react-query";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
 import { useState, useMemo } from "react";
 import type { Book } from "@/types";
 import { BookForm } from "@/components/book-form";
+import Button from "@/components/ui/Button";
 
 export default function BooksTable() {
+  const queryClient = useQueryClient();
+  
+  const deleteMutation = useMutation({
+    mutationFn: async (id: number) => {
+      const { error } = await supabase
+        .from('books')
+        .delete()
+        .eq('id', id);
+      
+      if (error) throw error;
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['books'] });
+    },
+  });
+
   const { data: books = [], isLoading, error } = useQuery<Book[]>({
     queryKey: ["books"],
     queryFn: async () => {
@@ -60,9 +77,9 @@ export default function BooksTable() {
 
   return (
     <>
-    <section className="w-full max-w-4xl mx-auto mt-8 bg-white rounded shadow p-4">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
-        <h2 className="text-xl font-bold">My Books</h2>
+    <section className="w-full bg-white rounded-lg shadow-sm border border-gray-200 p-6">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-6">
+        <h2 className="text-2xl font-bold">My Books</h2>
       </div>
       {isLoading ? (
         <div className="text-center py-8 text-gray-500">Loading books...</div>
@@ -107,26 +124,44 @@ export default function BooksTable() {
       )}
     </section>
     {editingBook && (
-      <div className="fixed inset-0 flex items-center justify-center bg-white bg-opacity-40 z-50 p-2 sm:p-0">
-        <div className="bg-white rounded shadow-lg max-w-md w-full relative">
+      <div className="fixed inset-0 flex items-start justify-center bg-white/75 backdrop-blur-sm z-50 p-2 pt-16 overflow-y-auto">
+        <div className="bg-white rounded-lg shadow-xl w-full max-w-md relative my-4 border border-gray-100">
           <button
-            className="absolute top-2 right-2 text-gray-500 hover:text-black text-2xl"
+            className="absolute top-3 right-3 text-gray-500 hover:text-gray-700 text-2xl z-10"
             onClick={handleClose}
             title="Close"
           >
             &times;
           </button>
           <BookForm
-  defaultValues={{
-    ...editingBook,
-    isbn: editingBook.isbn ?? undefined,
-    edition: editingBook.edition ?? undefined,
-    condition: editingBook.condition ?? undefined,
-    notes: editingBook.notes ?? undefined,
-    cover_url: editingBook.cover_url ?? undefined,
-  }}
-  onSuccess={handleClose}
-/>
+            defaultValues={{
+              ...editingBook,
+              isbn: editingBook.isbn ?? undefined,
+              edition: editingBook.edition ?? undefined,
+              condition: editingBook.condition ?? undefined,
+              notes: editingBook.notes ?? undefined,
+              cover_url: editingBook.cover_url ?? undefined,
+            }}
+            onSuccess={handleClose}
+          >
+            <div className="flex justify-center gap-2 pt-2">
+              <Button
+                variant="danger"
+                size="md"
+                className="w-full py-3"
+                disabled={deleteMutation.isPending}
+                onClick={async (e) => {
+                  e.preventDefault();
+                  if (window.confirm("Are you sure you want to delete this book? This cannot be undone.")) {
+                    await deleteMutation.mutateAsync(editingBook.id!);
+                    handleClose();
+                  }
+                }}
+              >
+                Delete Book
+              </Button>
+            </div>
+          </BookForm>
         </div>
       </div>
     )}

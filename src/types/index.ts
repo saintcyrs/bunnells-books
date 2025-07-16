@@ -39,3 +39,19 @@ export type OpenLibraryBookAuthor = {
   name: string;
 };
 
+export type OpenLibrarySearchResult = {
+  numFound: number;
+  start: number;
+  numFoundExact: boolean;
+  docs: Array<{
+    key: string;
+    title: string;
+    author_name?: string[];
+    first_publish_year?: number;
+    isbn?: string[];
+    cover_edition_key?: string;
+    cover_i?: number;
+    [key: string]: unknown;
+  }>;
+};
+

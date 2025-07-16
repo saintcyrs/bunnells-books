@@ -9,23 +9,28 @@ export default function Home() {
 
   return (
     <>
-      <main className="min-h-screen flex flex-col items-center bg-gray-50 p-3 sm:p-0">
-        {/* <h1 className="text-2xl sm:text-4xl font-bold mb-4 sm:mb-6 text-center">Bunnell&apos;s Books</h1> */}
-          <div className="flex gap-2 mb-6">
-          <button
-            className={`px-4 py-2 rounded font-medium transition-colors ${view === 'table' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-            onClick={() => setView('table')}
-          >
-            Table
-          </button>
-          <button
-            className={`px-4 py-2 rounded font-medium transition-colors ${view === 'covers' ? 'bg-blue-600 text-white' : 'bg-gray-200 text-gray-700 hover:bg-gray-300'}`}
-            onClick={() => setView('covers')}
-          >
-            Covers
-          </button>
+      <main className="min-h-screen bg-gray-50 p-3 sm:p-6">
+        <div className="max-w-7xl mx-auto">
+          <div className="bg-white rounded-t-lg shadow-sm border border-b-0 border-gray-200 px-6 pt-6 pb-4">
+            <div className="flex flex-wrap gap-3 mb-6">
+              <button
+                className={`px-4 py-2 rounded font-medium transition-colors ${view === 'table' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'}`}
+                onClick={() => setView('table')}
+              >
+                Table view
+              </button>
+              <button
+                className={`px-4 py-2 rounded font-medium transition-colors ${view === 'covers' ? 'bg-blue-600 text-white' : 'bg-white text-gray-700 hover:bg-gray-100 border border-gray-200'}`}
+                onClick={() => setView('covers')}
+              >
+                Covers view
+              </button>
+            </div>
+            <div className="w-full overflow-x-auto">
+              {view === 'table' ? <BooksTable /> : <BookList />}
+            </div>
+          </div>
         </div>
-        {view === 'table' ? <BooksTable /> : <BookList />}
       </main>
     </>
   );
