@@ -1,16 +1,15 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, Suspense } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { BookForm } from "@/components/book-form";
 import { BookList } from "@/components/book-list";
 
-export default function CollectionPage() {
-  const [showForm, setShowForm] = useState(false);
+// Create a separate component for the content that uses useSearchParams
+function CollectionPageContent() {
   const [searchQuery, setSearchQuery] = useState("");
-  const [refreshKey, setRefreshKey] = useState(0);
-  const router = useRouter();
   const searchParams = useSearchParams();
+  const router = useRouter();
 
   // Sync search query with URL on initial load
   useEffect(() => {
@@ -36,6 +35,9 @@ export default function CollectionPage() {
 
     return () => clearTimeout(timer);
   }, [searchQuery, router]);
+
+  const [showForm, setShowForm] = useState(false);
+  const [refreshKey, setRefreshKey] = useState(0);
 
   return (
     <div className="p-3 sm:p-6 bg-white min-h-screen">
@@ -69,5 +71,19 @@ export default function CollectionPage() {
 
       <BookList key={refreshKey} search={searchQuery} />
     </div>
+  );
+}
+
+export default function CollectionPage() {
+  return (
+    <Suspense fallback={
+      <div className="container mx-auto px-4 py-8">
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold text-gray-900">Loading...</h1>
+        </div>
+      </div>
+    }>
+      <CollectionPageContent />
+    </Suspense>
   );
 }
