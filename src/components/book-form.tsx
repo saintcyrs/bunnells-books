@@ -73,14 +73,30 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
     setSearching(false);
   }
 
-  async function uploadCover(file: File): Promise<string> {
-    const ext = file.name.split(".").pop();
+  async function uploadCover(originalFile: File): Promise<string> {
+    let file = originalFile;
+    let ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+
+    // Convert HEIC/HEIF to JPEG in-browser using dynamic import to keep bundle small
+    if (file.type === "image/heic" || file.type === "image/heif" || ext === "heic" || ext === "heif") {
+      const heic2any = (await import("heic2any")).default;
+      const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
+      file = new File([convertedBlob], file.name.replace(/\.(heic|heif)$/i, ".jpg"), {
+        type: "image/jpeg",
+      });
+      ext = "jpg";
+    }
+
     const id = crypto.randomUUID();
     const path = `covers/${id}.${ext}`;
-    const { error: uploadError } = await supabase.storage.from("covers").upload(path, file);
+
+    const { error: uploadError } = await supabase.storage.from("covers").upload(path, file, {
+      contentType: file.type,
+      upsert: false,
+    });
     if (uploadError) throw uploadError;
-    const publicUrlData = supabase.storage.from("covers").getPublicUrl(path);
-    return publicUrlData.data.publicUrl;
+    const { data } = supabase.storage.from("covers").getPublicUrl(path);
+    return data.publicUrl;
   }
 
   const fetchMetadata = async (isbn: string): Promise<void> => {
@@ -185,12 +201,19 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
           <Label>Cover Image</Label>
           <label className="inline-block mt-1 px-3 py-2 bg-gray-100 rounded cursor-pointer hover:bg-gray-200 px-2 py-1 bg-gray-200 rounded text-sm">
             <Input
-              type="file"
-              accept="image/*"
-              {...register("cover")}
-              className="hidden"
-              onChange={() => setSelectedCoverUrl(null)}
-            />
+               type="file"
+               accept="image/*"
+               {...register("cover", {
+                 onChange: (e) => {
+                   setSelectedCoverUrl(null);
+                   const file = (e.target as HTMLInputElement).files?.[0];
+                   if (file) {
+                     setSelectedCoverUrl(URL.createObjectURL(file));
+                   }
+                 },
+               })}
+               className="hidden"
+             />
             Upload Image
           </label>
           <div className="mt-2">
