@@ -32,6 +32,8 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
   const [searching, setSearching] = useState(false);
   const [coverResults, setCoverResults] = useState<string[]>([]);
   const [selectedCoverUrl, setSelectedCoverUrl] = useState<string | null>(defaultValues?.cover_url ?? null);
+  // Local blob preview for newly chosen file
+  const [coverPreview, setCoverPreview] = useState<string | null>(null);
 
   // --- OpenLibrary Cover Search Function ---
   async function searchOpenLibraryCovers() {
@@ -88,7 +90,7 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
     }
 
     const id = crypto.randomUUID();
-    const path = `covers/${id}.${ext}`;
+    const path = `${id}.${ext}`;
 
     const { error: uploadError } = await supabase.storage.from("covers").upload(path, file, {
       contentType: file.type,
@@ -113,19 +115,36 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
           "author",
           book.authors?.map((a: OpenLibraryBookAuthor) => a.name).join(", ") || ""
         );
+        if (book.edition_name) {
+          setValue("edition", book.edition_name);
+        }
+        if (book.publish_date) {
+          const match = (book.publish_date as string).match(/\d{4}/);
+          const pub = match ? match[0] : book.publish_date;
+          setValue("publication_date", pub, { shouldDirty: true, shouldValidate: true });
+        }
       }
     } catch (err) {
       console.error("Lookup failed:", err as Error);
     }
   };
 
+  const normalizeDate = (input?: string): string | null => {
+    if (!input) return null;
+    const trimmed = input.trim();
+    if (/^\d{4}$/.test(trimmed)) {
+      return `${trimmed}-01-01`; // year only => Jan 1
+    }
+    return trimmed; // assume YYYY-MM-DD or other full date string
+  };
+
   const onSubmit = async (data: BookFormValues): Promise<void> => {
     try {
       let cover_url: string | null = null;
-      if (selectedCoverUrl) {
-        cover_url = selectedCoverUrl;
-      } else if (data.cover && data.cover.length > 0) {
+      if (data.cover && data.cover.length > 0) {
         cover_url = await uploadCover(data.cover[0]);
+      } else if (selectedCoverUrl) {
+        cover_url = selectedCoverUrl;
       }
 
       let error;
@@ -138,6 +157,7 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
           author: data.author,
           edition: data.edition,
           condition: data.condition,
+          publication_date: normalizeDate(data.publication_date) ?? undefined,
           notes: data.notes,
         };
         if (cover_url !== null && cover_url !== undefined) {
@@ -156,6 +176,7 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
             author: data.author,
             edition: data.edition,
             condition: data.condition,
+            publication_date: normalizeDate(data.publication_date) ?? undefined,
             notes: data.notes,
             cover_url,
             added_at: new Date().toISOString(),
@@ -205,11 +226,15 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
                accept="image/*"
                {...register("cover", {
                  onChange: (e) => {
-                   setSelectedCoverUrl(null);
-                   const file = (e.target as HTMLInputElement).files?.[0];
-                   if (file) {
-                     setSelectedCoverUrl(URL.createObjectURL(file));
-                   }
+                    const input = e.target as HTMLInputElement;
+                    setSelectedCoverUrl(null);
+                    const file = input.files?.[0];
+                    if (file) {
+                      const previewUrl = URL.createObjectURL(file);
+                      setCoverPreview(previewUrl);
+                    }
+                    // return FileList so react-hook-form receives it
+                    return input.files;
                  },
                })}
                className="hidden"
@@ -256,6 +281,14 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
                 ))}
               </div>
             )}
+            {coverPreview && (
+              <div className="mt-2">
+                <span className="text-xs text-green-700">Image to be uploaded</span>
+                <div>
+                  <Image src={coverPreview} alt="Cover preview" width={96} height={128} className="w-24 h-32 mt-1 rounded shadow" />
+                </div>
+              </div>
+            )}
             {selectedCoverUrl && (
               <div className="mt-2">
                 <span className="text-xs text-green-700">Selected cover will be used.</span>
@@ -295,6 +328,16 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
     <Input
       id="edition"
       {...register("edition")}
+      className="mt-1 block w-full border rounded p-2"
+    />
+  </Field>
+</div>
+<div className="mb-3">
+  <Field>
+    <Label htmlFor="publication_date">Publication Date</Label>
+    <Input
+      id="publication_date"
+      {...register("publication_date")}
       className="mt-1 block w-full border rounded p-2"
     />
   </Field>

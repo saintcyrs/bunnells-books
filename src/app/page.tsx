@@ -3,35 +3,17 @@ import { useState } from "react";
 import BooksTable from "./page-table";
 import { BookList } from "../components/book-list";
 import Image from "next/image";
-import { useEffect } from "react";
 
 
 export default function Home() {
   const [view, setView] = useState<'table' | 'covers'>('table');
-  const [imageSrc, setImageSrc] = useState<string | null>(null);
-
-  useEffect(() => {
-    (async () => {
-      try {
-        const res = await fetch("/IMG_9613.jpg");
-        const blob = await res.blob();
-        const file = new File([blob], "IMG_9613.jpg", { type: "image/jpeg" });
-        const heic2any = (await import("heic2any")).default;
-        const convertedBlob = await heic2any({ blob: file, toType: "image/jpeg", quality: 0.9 }) as Blob;
-        const convertedFile = new File([convertedBlob], "IMG_9613.jpg", { type: "image/jpeg" });
-        setImageSrc(URL.createObjectURL(convertedFile));
-      } catch (err) {
-        console.error(err);
-      }
-    })();
-  }, []);
   return (
     <>
       <main className="min-h-screen bg-gray-50 p-3 sm:p-6">
         <div className="max-w-7xl mx-auto">
           <header className="mb-6">
             <Image
-              src={imageSrc || "/IMG_9613.jpg"}
+              src={"/IMG_9613.jpg"}
               alt="Bunnell's Books"
               width={0}
               height={0}

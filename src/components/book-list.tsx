@@ -26,6 +26,7 @@ export function BookList({ search = "" }: BookListProps) {
       author: book.author,
       edition: book.edition || undefined,
       condition: book.condition || undefined,
+      publication_date: book.publication_date || undefined,
       notes: book.notes || undefined,
       cover_url: book.cover_url || undefined,
     });

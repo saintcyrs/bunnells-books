@@ -9,6 +9,7 @@ export type Book = {
   edition: string | null;
   condition: string | null;
   notes: string | null;
+  publication_date: string | null;
   cover_url: string | null;
   added_at: string;
 };
@@ -23,6 +24,7 @@ export type BookFormValues = {
   edition?: string;
   condition?: string;
   notes?: string;
+  publication_date?: string;
   cover_url?: string;
 };
 

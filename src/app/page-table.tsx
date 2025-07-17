@@ -97,6 +97,7 @@ export default function BooksTable() {
                 <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("isbn")}>ISBN {sortKey === "isbn" && (sortDirection === "asc" ? "▲" : "▼")}</th>
                 <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("edition")}>Edition {sortKey === "edition" && (sortDirection === "asc" ? "▲" : "▼")}</th>
                 <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("condition")}>Condition {sortKey === "condition" && (sortDirection === "asc" ? "▲" : "▼")}</th>
+                <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("publication_date")}>Publication Year {sortKey === "publication_date" && (sortDirection === "asc" ? "▲" : "▼")}</th>
                 <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("notes")}>Notes {sortKey === "notes" && (sortDirection === "asc" ? "▲" : "▼")}</th>
                 <th className="px-3 py-2 border-b text-left cursor-pointer" onClick={() => handleSort("added_at")}>Added {sortKey === "added_at" && (sortDirection === "asc" ? "▲" : "▼")}</th>
               </tr>
@@ -114,6 +115,7 @@ export default function BooksTable() {
                     <td className="px-3 py-2 border-b">{book.isbn || "—"}</td>
                     <td className="px-3 py-2 border-b">{book.edition || "—"}</td>
                     <td className="px-3 py-2 border-b">{book.condition || "—"}</td>
+                    <td className="px-3 py-2 border-b">{book.publication_date ? book.publication_date.slice(0, 10) : "—"}</td>
                     <td className="px-3 py-2 border-b">{book.notes || "—"}</td>
                     <td className="px-3 py-2 border-b">{new Date(book.added_at).toLocaleDateString()}</td>
                   </tr>
@@ -140,6 +142,7 @@ export default function BooksTable() {
               edition: editingBook.edition ?? undefined,
               condition: editingBook.condition ?? undefined,
               notes: editingBook.notes ?? undefined,
+              publication_date: editingBook.publication_date ?? undefined,
               cover_url: editingBook.cover_url ?? undefined,
             }}
             onSuccess={handleClose}

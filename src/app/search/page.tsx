@@ -198,10 +198,12 @@ export default function SearchPage() {
                 {data.authors?.map((a: OpenLibraryBookAuthor) => a.name).join(", ") || 'N/A'}
               </p>
               {data.cover?.medium && (
-                <Image 
-                  src={data.cover.medium} 
-                  alt={`Cover of ${data.title || 'book'}`} 
-                  className="mb-3 max-h-48 rounded shadow-sm"
+                <Image
+                  src={data.cover.medium}
+                  alt={`Cover of ${data.title || 'book'}`}
+                  width={128}
+                  height={192}
+                  className="mb-3 rounded shadow-sm"
                 />
               )}
               <div className="flex justify-end">
