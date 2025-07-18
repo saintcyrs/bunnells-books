@@ -54,8 +54,8 @@ function CollectionPageContent() {
       </div>
 
       {showForm && (
-        <div className="fixed inset-0 bg-white bg-opacity-30 flex items-center justify-center p-2 sm:p-0 z-50">
-          <div className="bg-white rounded shadow-lg w-full max-w-md">
+        <div className="fixed inset-0 bg-white bg-opacity-30 flex items-start justify-center overflow-y-auto p-4 sm:p-6 z-50">
+          <div className="bg-white rounded shadow-lg w-full max-w-md max-h-full overflow-y-auto">
             <div className="flex justify-between items-center border-b p-4">
               <button onClick={() => setShowForm(false)} className="text-2xl text-gray-500 hover:text-black">&times;</button>
             </div>

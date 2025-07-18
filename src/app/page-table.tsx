@@ -115,7 +115,7 @@ export default function BooksTable() {
                     <td className="px-3 py-2 border-b">{book.isbn || "—"}</td>
                     <td className="px-3 py-2 border-b">{book.edition || "—"}</td>
                     <td className="px-3 py-2 border-b">{book.condition || "—"}</td>
-                    <td className="px-3 py-2 border-b">{book.publication_date ? book.publication_date.slice(0, 10) : "—"}</td>
+                    <td className="px-3 py-2 border-b">{book.publication_date ? book.publication_date.slice(0, 4) : "—"}</td>
                     <td className="px-3 py-2 border-b">{book.notes || "—"}</td>
                     <td className="px-3 py-2 border-b">{new Date(book.added_at).toLocaleDateString()}</td>
                   </tr>

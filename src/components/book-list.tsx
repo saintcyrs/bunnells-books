@@ -2,7 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { supabase } from "@/lib/supabaseClient";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { BookForm } from "./book-form";
 import type { Book, BookFormValues } from "@/types";
 import Image from "next/image";
@@ -17,6 +17,15 @@ export function BookList({ search = "" }: BookListProps) {
   const [imageSizes, setImageSizes] = useState<Record<number, { width: number; height: number }>>({});
   const queryClient = useQueryClient();
   const [editingBook, setEditingBook] = useState<Partial<BookFormValues>>();
+  // Track which book's note is currently open
+  const [openNoteId, setOpenNoteId] = useState<number | null>(null);
+  // Close note popovers when clicking anywhere else
+  useEffect(() => {
+    if (openNoteId === null) return;
+    const handler = () => setOpenNoteId(null);
+    document.addEventListener("click", handler);
+    return () => document.removeEventListener("click", handler);
+  }, [openNoteId]);
 
   const handleEdit = (book: Book) => {
     setEditingBook({
@@ -83,8 +92,30 @@ export function BookList({ search = "" }: BookListProps) {
               className="bg-white rounded-lg shadow overflow-hidden relative group cursor-pointer transition-transform hover:scale-[1.01] active:scale-95"
               onClick={() => handleEdit(book)}
             >
+              {book.notes && (
+                <button
+                  className="absolute top-2 left-2 z-10 p-1.5 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-blue-700"
+                  title="View note"
+                  onClick={(e) => {
+                    e.stopPropagation();
+                    setOpenNoteId(openNoteId === book.id ? null : book.id);
+                  }}
+                >
+                  <span className="text-lg" role="img" aria-label="note">💬</span>
+                </button>
+              )}
+
+              {book.notes && openNoteId === book.id && (
+                <div
+                  className="absolute top-12 left-2 bg-white border rounded shadow-lg p-3 text-sm w-56 z-20"
+                  onClick={(e) => e.stopPropagation()}
+                >
+                  <p className="whitespace-pre-wrap">{book.notes}</p>
+                </div>
+              )}
+
               <button
-                className="absolute top-2 right-2 z-10 p-1.5 bg-red-600 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
+                className="absolute top-2 right-2 z-10 p-1.5 text-white rounded-full opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-700"
                 title="Delete book"
                 onClick={async (e) => {
                   e.stopPropagation();
@@ -94,9 +125,7 @@ export function BookList({ search = "" }: BookListProps) {
                 }}
                 disabled={deleteMutation.isPending}
               >
-                <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4" viewBox="0 0 20 20" fill="currentColor">
-                  <path fillRule="evenodd" d="M9 2a1 1 0 00-.894.553L7.382 4H4a1 1 0 000 2v10a2 2 0 002 2h8a2 2 0 002-2V6a1 1 0 100-2h-3.382l-.724-1.447A1 1 0 0011 2H9zM7 8a1 1 0 012 0v6a1 1 0 11-2 0V8zm5-1a1 1 0 00-1 1v6a1 1 0 102 0V8a1 1 0 00-1-1z" clipRule="evenodd" />
-                </svg>
+                <span className="text-lg" role="img" aria-label="delete">🗑️</span>
               </button>
               {book.cover_url ? (
                 <div
