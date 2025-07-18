@@ -78,6 +78,12 @@ export function BookForm({ defaultValues, onSuccess, children }: React.PropsWith
   async function uploadCover(originalFile: File): Promise<string> {
     let file = originalFile;
     let ext = file.name.split(".").pop()?.toLowerCase() || "jpg";
+    if (ext === "jpeg") {
+      // Normalize jpeg to jpg for consistent storage paths
+      ext = "jpg";
+      // Rename file so that Supabase object key ends with .jpg
+      file = new File([file], file.name.replace(/\.jpeg$/i, ".jpg"), { type: file.type });
+    }
 
     // Convert HEIC/HEIF to JPEG in-browser using dynamic import to keep bundle small
     if (file.type === "image/heic" || file.type === "image/heif" || ext === "heic" || ext === "heif") {
